@@ -2,7 +2,6 @@ from flask import Flask, request, render_template, jsonify
 import pickle
 import feedparser
 from deep_translator import GoogleTranslator
-import random
 
 app = Flask(__name__)
 
@@ -33,33 +32,17 @@ def fetch_news_rss(query, lang='en'):
     return posts
 
 def get_top_rumors():
-    """
-    Returns a list of trending rumors for the demo. 
-    You can update these strings to match current events!
-    """
     return [
-        {
-            "text": "RBI to withdraw ₹500 notes next month?",
-            "status": "Viral on WhatsApp",
-            "verdict": "FAKE"
-        },
-        {
-            "text": "New 'Cyber-Kidnap' scam targeting Chennai parents",
-            "status": "Trending Now",
-            "verdict": "REAL THREAT"
-        },
-        {
-            "text": "Free iPhone 15 giveaway link by Govt of India",
-            "status": "Shared 10k times",
-            "verdict": "SCAM"
-        }
+        {"text": "RBI withdrawing ₹500 notes?", "status": "Viral on WhatsApp", "verdict": "FAKE"},
+        {"text": "Free iPhone 15 Govt Scheme", "status": "Shared 10k times", "verdict": "SCAM"},
+        {"text": "Chennai Metro Ticket Hike", "status": "Trending", "verdict": "REAL"}
     ]
 
 # --- ROUTES ---
 @app.route('/')
 def home():
     news = fetch_news_rss("Tamil Nadu", lang='ta')
-    rumors = get_top_rumors() # Get the top rumors
+    rumors = get_top_rumors()
     return render_template('home.html', news_data=news, current_feed="Tamil News", rumors=rumors)
 
 @app.route('/get_feed', methods=['POST'])
@@ -85,7 +68,7 @@ def search_news():
             
     news = fetch_news_rss(search_query, lang='en')
     rumors = get_top_rumors()
-    return render_template('home.html', news_data=news, current_feed=f"Results for: {raw_query}", search_val=raw_query, rumors=rumors)
+    return render_template('home.html', news_data=news, current_feed=f"Results: {raw_query}", search_val=raw_query, rumors=rumors)
 
 @app.route('/predict', methods=['POST'])
 def predict():
