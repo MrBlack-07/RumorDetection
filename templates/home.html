@@ -143,7 +143,7 @@
             <h1>TruthLens <span>AI</span></h1>
             <p>Enterprise Grade Rumor Detection System</p>
         </div>
-        
+
         {% if error %}
         <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
             <span>⚠️</span> {{ error }}
@@ -160,7 +160,7 @@
             <label>Article Content</label>
             <textarea name="news" class="form-control" placeholder="Paste news text here for analysis..." required></textarea>
 
-            <button type="submit" class="btn-submit">Analyze Authenticity</button>
+            <button type="submit" class="btn-submit">Analyze</button>
         </form>
     </div>
 
@@ -169,7 +169,7 @@
         <div class="card alert-widget">
             <div class="widget-header">
                 <h3><span style="color:var(--danger);">●</span> High Risk Alerts</h3>
-                <span class="refresh-badge">Auto-Refreshes every 2h</span>
+                <span class="refresh-badge">Auto-Refreshes</span>
             </div>
             
             {% for rumor in rumors %}
