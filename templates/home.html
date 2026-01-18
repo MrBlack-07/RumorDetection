@@ -9,151 +9,116 @@
         /* --- GLOBAL STYLES --- */
         :root {
             --primary: #6C63FF;
+            --secondary: #2A2A2E;
             --accent: #00E5FF;
-            --glass: rgba(255, 255, 255, 0.08);
+            --text-light: #f5f5f5;
+            --glass: rgba(255, 255, 255, 0.1);
             --danger: #FF5252;
-            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--bg-gradient);
-            color: #f5f5f5;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: var(--text-light);
             margin: 0;
             padding: 0;
-            height: 100vh; /* Force full screen height */
-            display: flex;
-            justify-content: center;
-            align-items: center; /* Center vertically */
-            overflow: hidden; /* Prevent body scroll, let containers scroll */
+            min-height: 100vh;
         }
 
-        /* --- LAYOUT GRID --- */
         .container {
-            width: 95%;
-            max-width: 1400px;
-            height: 90vh; /* Takes up 90% of screen height */
-            display: grid;
-            grid-template-columns: 1.5fr 1fr; /* Left side wider */
-            gap: 15px; /* GAP REMOVED: Reduced from 25px to 15px */
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
         }
 
-        /* --- LEFT BOX: DETECTOR --- */
+        /* --- LEFT SIDE: DETECTOR --- */
         .main-section {
+            flex: 2;
             background: var(--glass);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 20px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Centers content vertically */
-            height: 100%; /* Forces it to match the right side height */
-            box-sizing: border-box;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        h1 { font-size: 2.5rem; margin: 0; background: -webkit-linear-gradient(var(--accent), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { color: #ccc; margin-bottom: 25px; }
-
-        label { font-weight: 600; color: #ddd; margin-top: 15px; display: block; }
-
-        select, textarea {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid #555;
-            border-radius: 10px;
-            color: white;
-            padding: 15px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
+        h1 { font-size: 2.5rem; margin-bottom: 5px; background: -webkit-linear-gradient(var(--accent), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        textarea { height: 250px; resize: none; } /* Made taller to fill gap */
-        textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+        textarea {
+            width: 100%; height: 150px; background: rgba(0,0,0,0.3); border: 2px solid var(--primary);
+            border-radius: 12px; color: white; padding: 15px; font-size: 1rem; resize: none; margin-bottom: 20px;
+        }
+        textarea:focus { outline: none; box-shadow: 0 0 15px var(--primary); }
+
+        select {
+            width: 100%; padding: 12px; background: #1a1a1d; border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 15px;
+        }
 
         .btn-main {
-            width: 100%;
-            padding: 15px;
-            margin-top: 25px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: 0.2s;
+            width: 100%; padding: 15px; background: linear-gradient(45deg, var(--primary), var(--accent));
+            border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 1.1rem; cursor: pointer;
         }
-        .btn-main:hover { transform: translateY(-2px); }
+        .btn-main:hover { transform: scale(1.02); }
 
-        /* --- RIGHT BOX: SIDEBAR --- */
+        /* --- RIGHT SIDE: SIDEBAR --- */
         .sidebar {
+            flex: 1;
+            min-width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            height: 100%; /* Full height */
+            gap: 20px;
         }
 
-        /* Rumor Alerts */
+        /* RUMOR CARD (NEW) */
         .rumor-card {
-            background: rgba(255, 82, 82, 0.15);
+            background: rgba(255, 82, 82, 0.1); /* Red tint */
             border: 1px solid var(--danger);
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 20px;
-            flex-shrink: 0; /* Prevents shrinking */
+            backdrop-filter: blur(5px);
         }
-        .rumor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .rumor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .pulse-dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite; }
+        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        .rumor-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .rumor-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .rumor-item:last-child { border: none; margin: 0; }
-        .rumor-tag { font-size: 0.7rem; background: var(--danger); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .rumor-text { font-size: 0.9rem; font-weight: 600; color: #fff; }
+        .rumor-tag { font-size: 0.75rem; background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; margin-left: 5px; }
 
-        /* News Feed */
+        /* NEWS FEED */
         .news-section {
             background: var(--glass);
             border-radius: 20px;
-            padding: 20px;
-            flex-grow: 1; /* Fills all remaining space */
+            padding: 25px;
+            flex-grow: 1;
+            height: 500px;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden; /* Contains the scroll area */
         }
 
-        .search-bar { display: flex; gap: 10px; margin-bottom: 10px; }
-        .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: none; background: rgba(0,0,0,0.4); color: white; }
-        .search-btn { background: var(--accent); border: none; border-radius: 8px; width: 45px; cursor: pointer; font-size: 1.1rem; }
-
-        .feed-controls { display: flex; gap: 10px; margin-bottom: 10px; }
-        .feed-btn { flex: 1; padding: 8px; border: 1px solid var(--primary); background: transparent; color: white; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+        .feed-controls { display: flex; gap: 10px; margin: 15px 0; }
+        .feed-btn { flex: 1; padding: 8px; border: 1px solid var(--primary); background: transparent; color: white; border-radius: 20px; cursor: pointer; transition: 0.3s; }
         .feed-btn.active { background: var(--primary); }
 
-        .news-scroll-area { 
-            flex: 1; 
-            overflow-y: auto; /* Internal scrolling only */
-            padding-right: 5px; 
-        }
-        .news-scroll-area::-webkit-scrollbar { width: 5px; }
-        .news-scroll-area::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .search-bar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: white; }
+        .search-btn { padding: 10px; background: var(--accent); border: none; border-radius: 8px; cursor: pointer; }
+
+        .news-scroll-area { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .news-scroll-area::-webkit-scrollbar { width: 6px; }
+        .news-scroll-area::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
         .news-card {
             background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--accent);
         }
-        .news-card a { text-decoration: none; color: #eee; font-size: 0.9rem; font-weight: 500; display:block; }
-        .meta { font-size: 0.7rem; color: #aaa; margin-top: 4px; display: block; }
+        .news-card a { text-decoration: none; color: #eee; font-size: 0.9rem; }
+        .meta { font-size: 0.75rem; color: #aaa; display: block; margin-top: 5px; }
 
-        /* --- MOBILE RESPONSIVENESS --- */
-        @media (max-width: 900px) {
-            body { height: auto; overflow-y: auto; display: block; padding: 20px; }
-            .container { display: flex; flex-direction: column; height: auto; width: 100%; gap: 20px; }
-            .main-section { height: auto; padding: 20px; }
-            .sidebar { height: auto; }
-            .news-section { height: 500px; } /* Fixed height for news on mobile */
-        }
     </style>
 </head>
 <body>
@@ -161,23 +126,21 @@
 <div class="container">
     
     <div class="main-section">
-        <div>
-            <h1>TruthLens <span style="font-size:0.5em; color:var(--accent); vertical-align: middle;">AI</span></h1>
-            <p>Analyze rumors instantly. Supports English, Tamil & Tanglish.</p>
+        <h1>TruthLens <span style="font-size:0.5em; color:var(--accent);">AI</span></h1>
+        <p style="color:#ccc; margin-bottom: 30px;">Detect Fake News instantly. Supports English, Tamil, and Tanglish.</p>
 
-            <form action="/predict" method="POST">
-                <label>Select Language</label>
-                <select name="language">
-                    <option value="english">English (Standard)</option>
-                    <option value="tanglish">Tanglish / Tamil (Auto-Translate)</option>
-                </select>
+        <form action="/predict" method="POST">
+            <label>Select Language</label>
+            <select name="language">
+                <option value="english">English (Standard)</option>
+                <option value="tanglish">Tanglish / Tamil (Auto-Translate)</option>
+            </select>
 
-                <label>News Content</label>
-                <textarea name="news" placeholder="Paste article content here... (e.g. 'Chennai flood alert issued')" required></textarea>
+            <label>News Content</label>
+            <textarea name="news" placeholder="Paste article here... (e.g. 'Chennai flood alert issued')" required></textarea>
 
-                <button type="submit" class="btn-main">Analyze Truth</button>
-            </form>
-        </div>
+            <button type="submit" class="btn-main">Analyze Truth</button>
+        </form>
     </div>
 
     <div class="sidebar">
@@ -185,21 +148,21 @@
         <div class="rumor-card">
             <div class="rumor-header">
                 <div class="pulse-dot"></div>
-                <h3 style="margin:0; color: #FF5252;">Viral Alerts</h3>
+                <h3 style="margin:0; color: #FF5252;">Top 3 Viral Rumors</h3>
             </div>
             {% for rumor in rumors %}
             <div class="rumor-item">
-                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 3px;">{{ rumor.text }}</div>
-                <div style="display:flex; align-items: center; justify-content: space-between;">
+                <div class="rumor-text">{{ rumor.text }}</div>
+                <div style="margin-top:5px;">
                     <span class="rumor-tag">{{ rumor.verdict }}</span>
-                    <span style="font-size:0.7rem; color:#ccc;">{{ rumor.status }}</span>
+                    <span style="font-size:0.75rem; color:#ccc; margin-left:5px;">{{ rumor.status }}</span>
                 </div>
             </div>
             {% endfor %}
         </div>
 
         <div class="news-section">
-            <h3 style="margin:0; font-size: 1.2rem;">Live Feed</h3>
+            <h3 style="margin:0;">Live Feed</h3>
             
             <form class="search-bar" action="/search_news" method="POST" style="margin-top:15px;">
                 <input type="text" name="query" placeholder="Search news..." value="{{ search_val }}">
