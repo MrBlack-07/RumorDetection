@@ -143,6 +143,12 @@
             <h1>TruthLens <span>AI</span></h1>
             <p>Enterprise Grade Rumor Detection System</p>
         </div>
+        
+        {% if error %}
+        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+            <span>⚠️</span> {{ error }}
+        </div>
+        {% endif %}
 
         <form action="/predict" method="POST">
             <label>Input Language Source</label>
