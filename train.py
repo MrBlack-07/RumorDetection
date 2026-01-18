@@ -6,48 +6,38 @@ from sklearn.metrics import accuracy_score
 import pickle
 import os
 
-# --- 1. DATA PREPARATION (For Dataset Option 2) ---
-print("Loading dataset...")
+print("--- STARTING TRAINING ---")
 
+# 1. LOAD DATA
 try:
-    # Read the two separate files
+    print("Loading True.csv and Fake.csv...")
     df_true = pd.read_csv('True.csv')
     df_fake = pd.read_csv('Fake.csv')
     
-    # Add labels (1 for Real, 0 for Fake) or text labels
     df_true['label'] = 'REAL'
     df_fake['label'] = 'FAKE'
     
-    # Merge them into one dataset
     df = pd.concat([df_true, df_fake])
-    
-    # Shuffle the data (so it's not all Real then all Fake)
     df = df.sample(frac=1).reset_index(drop=True)
-    
-    print(f"Success! Loaded {len(df)} articles.")
-    
-except FileNotFoundError:
-    print("ERROR: Could not find 'True.csv' or 'Fake.csv'.")
-    print("Please download them from Kaggle and put them in this folder.")
+    print(f"Loaded {len(df)} articles.")
+except:
+    print("ERROR: Could not find True.csv or Fake.csv in this folder.")
+    print("Please download them from Kaggle!")
     exit()
 
-# --- 2. TRAINING ---
-print("Training model (this may take a minute)...")
+# 2. TRAIN (With limits to keep file size small)
+print("Training model...")
+# max_features=10000 keeps the brain size under 50MB so GitHub accepts it
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, max_features=10000)
 
-# Initialize Vectorizer
-# We use 'text' column because this dataset has full article text
-tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
-
-# Convert text to numbers
 tfidf_train = tfidf_vectorizer.fit_transform(df['text'])
-
-# Initialize Passive Aggressive Classifier
 pac = PassiveAggressiveClassifier(max_iter=50)
 pac.fit(tfidf_train, df['label'])
 
-# --- 3. SAVE THE MODEL ---
+# 3. SAVE
+print("Saving brain files...")
 pickle.dump(pac, open('pac.pkl', 'wb'))
 pickle.dump(tfidf_vectorizer, open('vectorizer.pkl', 'wb'))
 
-print("DONE! 'pac.pkl' and 'vectorizer.pkl' have been saved.")
-print("Now run 'python app.py' to start your site.")
+print("SUCCESS! New 'pac.pkl' and 'vectorizer.pkl' created.")
+print("CHECK: Your 'pac.pkl' should now be around 10MB - 50MB size.")
