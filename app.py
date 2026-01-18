@@ -4,15 +4,20 @@ import feedparser
 from deep_translator import GoogleTranslator
 import random
 from datetime import datetime, timedelta
+import os
 
 app = Flask(__name__)
 
-# --- LOAD MODELS ---
+# --- LOAD MODELS SAFELY ---
+model = None
+vectorizer = None
+
 try:
     model = pickle.load(open('pac.pkl', 'rb'))
     vectorizer = pickle.load(open('vectorizer.pkl', 'rb'))
-except:
-    print("WARNING: Models not found. Run train.py first!")
+except Exception as e:
+    print(f"WARNING: Models not found or corrupted. {e}")
+    # The app will still run, but predictions will show an error instead of crashing.
 
 # --- RUMOR DATABASE ---
 RUMOR_POOL = [
@@ -34,79 +39,107 @@ next_update_time = datetime.now()
 
 def update_rumors_if_needed():
     global current_rumors, next_update_time
-    if not current_rumors or datetime.now() > next_update_time:
-        current_rumors = random.sample(RUMOR_POOL, 3)
-        next_update_time = datetime.now() + timedelta(hours=2)
+    try:
+        if not current_rumors or datetime.now() > next_update_time:
+            current_rumors = random.sample(RUMOR_POOL, min(3, len(RUMOR_POOL)))
+            next_update_time = datetime.now() + timedelta(hours=2)
+    except Exception as e:
+        print(f"Error updating rumors: {e}")
+        current_rumors = RUMOR_POOL[:3] # Fallback
 
 def fetch_news_rss(query, lang='en'):
-    clean_query = query.replace(" ", "+")
-    if lang == 'ta':
-        url = f"https://news.google.com/rss/search?q={clean_query}&hl=ta&gl=IN&ceid=IN:ta"
-    else:
-        url = f"https://news.google.com/rss/search?q={clean_query}&hl=en-IN&gl=IN&ceid=IN:en"
-    
-    feed = feedparser.parse(url)
-    posts = []
-    for entry in feed.entries[:10]:
-        posts.append({
-            'title': entry.title,
-            'link': entry.link,
-            'published': entry.published,
-            'source': entry.source.title if hasattr(entry, 'source') else 'Google News'
-        })
-    return posts
+    try:
+        clean_query = query.replace(" ", "+")
+        if lang == 'ta':
+            url = f"https://news.google.com/rss/search?q={clean_query}&hl=ta&gl=IN&ceid=IN:ta"
+        else:
+            url = f"https://news.google.com/rss/search?q={clean_query}&hl=en-IN&gl=IN&ceid=IN:en"
+        
+        feed = feedparser.parse(url)
+        posts = []
+        for entry in feed.entries[:10]:
+            posts.append({
+                'title': entry.title,
+                'link': entry.link,
+                'published': entry.published,
+                'source': entry.source.title if hasattr(entry, 'source') else 'Google News'
+            })
+        return posts
+    except Exception as e:
+        print(f"RSS Error: {e}")
+        return []
 
 # --- ROUTES ---
 @app.route('/')
 def home():
-    update_rumors_if_needed()
-    news = fetch_news_rss("Tamil Nadu", lang='ta')
-    return render_template('home.html', news_data=news, current_feed="Tamil News", rumors=current_rumors)
+    try:
+        update_rumors_if_needed()
+        news = fetch_news_rss("Tamil Nadu", lang='ta')
+        return render_template('home.html', news_data=news, current_feed="Tamil News", rumors=current_rumors)
+    except Exception as e:
+        return f"App Error: {str(e)}"
 
 @app.route('/get_feed', methods=['POST'])
 def get_feed():
-    """API for JavaScript to fetch news without reloading"""
-    feed_type = request.json.get('type')
-    if feed_type == 'tamil':
-        news = fetch_news_rss("Tamil Nadu", lang='ta')
-    else:
-        news = fetch_news_rss("India", lang='en')
-    return jsonify(news)
+    try:
+        feed_type = request.json.get('type')
+        if feed_type == 'tamil':
+            news = fetch_news_rss("Tamil Nadu", lang='ta')
+        else:
+            news = fetch_news_rss("India", lang='en')
+        return jsonify(news)
+    except Exception as e:
+        return jsonify([])
 
 @app.route('/search_news', methods=['POST'])
 def search_news():
-    update_rumors_if_needed()
-    raw_query = request.form.get('query')
-    lang_mode = request.form.get('search_lang')
-    
-    search_query = raw_query
-    if lang_mode == 'tanglish':
-        try:
-            search_query = GoogleTranslator(source='auto', target='en').translate(raw_query)
-        except:
-            pass
-            
-    news = fetch_news_rss(search_query, lang='en')
-    return render_template('home.html', news_data=news, current_feed=f"Results: {raw_query}", search_val=raw_query, rumors=current_rumors)
+    try:
+        update_rumors_if_needed()
+        raw_query = request.form.get('query', '')
+        lang_mode = request.form.get('search_lang')
+        
+        search_query = raw_query
+        if lang_mode == 'tanglish':
+            try:
+                search_query = GoogleTranslator(source='auto', target='en').translate(raw_query)
+            except Exception as e:
+                print(f"Translation failed: {e}")
+                
+        news = fetch_news_rss(search_query, lang='en')
+        return render_template('home.html', news_data=news, current_feed=f"Results: {raw_query}", search_val=raw_query, rumors=current_rumors)
+    except Exception as e:
+        return render_template('home.html', news_data=[], error="Search failed.")
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    update_rumors_if_needed()
-    if request.method == 'POST':
-        news_text = request.form['news']
-        language = request.form.get('language')
-        
-        final_text = news_text
-        if language == 'tanglish':
-            try:
-                final_text = GoogleTranslator(source='auto', target='en').translate(news_text)
-            except:
-                pass
+    try:
+        if not model or not vectorizer:
+            return "Model not loaded properly. Please contact admin."
 
-        vec_text = vectorizer.transform([final_text])
-        prediction = model.predict(vec_text)
-        
-        return render_template('result.html', prediction=prediction[0], original=news_text, translated=final_text)
+        update_rumors_if_needed()
+        if request.method == 'POST':
+            news_text = request.form.get('news', '').strip()
+            
+            if not news_text:
+                return render_template('home.html', news_data=[], rumors=current_rumors, error="Please enter some text!")
+
+            language = request.form.get('language')
+            final_text = news_text
+            
+            if language == 'tanglish':
+                try:
+                    final_text = GoogleTranslator(source='auto', target='en').translate(news_text)
+                except Exception as e:
+                    print(f"Translation Error: {e}")
+
+            vec_text = vectorizer.transform([final_text])
+            prediction = model.predict(vec_text)
+            
+            return render_template('result.html', prediction=prediction[0], original=news_text, translated=final_text)
+            
+    except Exception as e:
+        print(f"Prediction Error: {e}")
+        return render_template('home.html', news_data=[], rumors=current_rumors, error="Analysis failed. Please try again.")
 
 if __name__ == '__main__':
     app.run(debug=True)

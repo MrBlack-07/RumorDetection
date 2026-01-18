@@ -4,30 +4,38 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.metrics import accuracy_score
 import pickle
+import os
 
-# --- 1. DATA PREPARATION ---
-# For a real project, download 'news.csv' from Kaggle. 
-# For this demo, we use a small internal dataset to make it run INSTANTLY.
-data = {
-    'text': [
-        "Aliens have landed in Chennai and are demanding coffee.",
-        "Government announces new tax reforms for small businesses.",
-        "Drinking water cures all diseases instantly according to new study.",
-        "The Prime Minister inaugurated the new metro line today.",
-        "Scientists discover a tree that grows gold coins.",
-        "RBI keeps repo rate unchanged in latest monetary policy.",
-        "NASA confirms earth is actually flat and rests on a turtle.",
-        "Election commission announces dates for upcoming assembly polls."
-    ],
-    'label': [
-        "FAKE", "REAL", "FAKE", "REAL", "FAKE", "REAL", "FAKE", "REAL"
-    ]
-}
+# --- 1. DATA PREPARATION (For Dataset Option 2) ---
+print("Loading dataset...")
 
-df = pd.DataFrame(data)
+try:
+    # Read the two separate files
+    df_true = pd.read_csv('True.csv')
+    df_fake = pd.read_csv('Fake.csv')
+    
+    # Add labels (1 for Real, 0 for Fake) or text labels
+    df_true['label'] = 'REAL'
+    df_fake['label'] = 'FAKE'
+    
+    # Merge them into one dataset
+    df = pd.concat([df_true, df_fake])
+    
+    # Shuffle the data (so it's not all Real then all Fake)
+    df = df.sample(frac=1).reset_index(drop=True)
+    
+    print(f"Success! Loaded {len(df)} articles.")
+    
+except FileNotFoundError:
+    print("ERROR: Could not find 'True.csv' or 'Fake.csv'.")
+    print("Please download them from Kaggle and put them in this folder.")
+    exit()
 
 # --- 2. TRAINING ---
-# Initialize Vectorizer (Stop words removes 'the', 'is', etc.)
+print("Training model (this may take a minute)...")
+
+# Initialize Vectorizer
+# We use 'text' column because this dataset has full article text
 tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
 
 # Convert text to numbers
@@ -41,4 +49,5 @@ pac.fit(tfidf_train, df['label'])
 pickle.dump(pac, open('pac.pkl', 'wb'))
 pickle.dump(tfidf_vectorizer, open('vectorizer.pkl', 'wb'))
 
-print("Model trained successfully! 'pac.pkl' and 'vectorizer.pkl' created.")
+print("DONE! 'pac.pkl' and 'vectorizer.pkl' have been saved.")
+print("Now run 'python app.py' to start your site.")
