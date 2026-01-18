@@ -114,16 +114,23 @@ def search_news():
 def predict():
     try:
         if not model or not vectorizer:
-            return "Model not loaded properly. Please contact admin."
+            return "Model not loaded properly."
 
         update_rumors_if_needed()
         if request.method == 'POST':
             news_text = request.form.get('news', '').strip()
             
-            if not news_text:
-                return render_template('home.html', news_data=[], rumors=current_rumors, error="Please enter some text!")
+            # --- NEW: BLOCK SHORT INPUTS ---
+            if len(news_text) < 20:
+                # If text is less than 20 characters, stop and show error
+                news = fetch_news_rss("Tamil Nadu", lang='ta')
+                return render_template('home.html', 
+                                     news_data=news, 
+                                     rumors=current_rumors, 
+                                     error="⚠️ Text is too short! Please paste a full headline or article.")
+            # -------------------------------
 
-            language = request.form.get('language')
+            language = request.form.get('language')            
             final_text = news_text
             
             if language == 'tanglish':
