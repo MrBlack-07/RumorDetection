@@ -449,6 +449,15 @@ def predict_quick():
         if not text:
             return jsonify({'prediction': 'UNCERTAIN'})
             
+        word_count = len(text.split())
+        if word_count < 3:
+            return jsonify({
+                'prediction': 'UNCERTAIN',
+                'explanation': 'Your input is too short. Machine Learning models require at least a full sentence or a few words of context to make an accurate prediction.',
+                'confidence': 0,
+                'source_title': 'Input Too Short'
+            })
+            
         answer = get_qa_answer(text)
         
         if answer['verdict'] == 'Yes':
