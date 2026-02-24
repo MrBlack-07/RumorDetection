@@ -1,269 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rumor Detection</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Fake News - Machine Learning</title>
+    <!-- Add Poppins font for the bold clean look -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        /* --- DARK THEME VARIABLES --- */
         :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-input: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --border: #334155;
-            --danger: #ef4444;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --bg-dark: #242424;
+            --bg-light: #F8F9FA;
+            --accent-green: #68D934;
+            /* Bright green from screenshot */
+            --accent-green-dark: #4A9A24;
+            --text-dark: #FFFFFF;
+            --text-light: #333333;
+            --muted-text: #888888;
+            --input-bg: #1A1A1A;
+            --input-border: #3A3A3A;
+            --font-family: 'Poppins', sans-serif;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .dashboard {
-            width: 95%; max-width: 1400px; height: 92vh;
-            display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
         }
 
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; box-shadow: var(--shadow);
-            display: flex; flex-direction: column; overflow: hidden;
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #FFFFFF;
         }
 
-        /* DETECTOR STYLE */
-        .detector-box { padding: 40px; justify-content: center; }
-        .header h1 { font-size: 2.5rem; margin: 0 0 10px 0; }
-        .header h1 span { color: var(--primary); }
-        .header p { color: var(--text-muted); margin: 0; }
-        
-        label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 10px; margin-top: 20px;}
-        .form-control {
-            width: 100%; padding: 14px; border: 1px solid var(--border);
-            border-radius: 8px; font-size: 1rem; color: var(--text-main);
-            background: var(--bg-input); font-family: inherit;
+        .nav-links a {
+            text-decoration: none;
+            color: var(--accent-green);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
         }
-        .form-control:focus { outline: none; border-color: var(--primary); }
-        textarea.form-control { height: 240px; resize: none; margin-bottom: 24px; }
-        
-        .btn-submit {
-            width: 100%; padding: 16px; margin-top: 25px;
-            background-color: var(--primary); color: white; border: none;
-            border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer;
-            transition: 0.2s;
+
+        .nav-links a:hover {
+            color: var(--accent-green-dark);
         }
-        .btn-submit:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
 
-        /* SIDEBAR STYLE */
-        .sidebar { background: transparent; box-shadow: none; border: none; gap: 24px; }
-        
-        .alert-widget { padding: 20px; background: rgba(20, 20, 30, 0.6); }
-        .widget-header h3 { margin: 0; color: var(--danger); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;}
-        .refresh-badge { font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--danger); color: var(--danger); }
-
-        .rumor-item {
-            padding: 12px; background: var(--bg-input); border: 1px solid var(--border);
-            border-radius: 8px; margin-bottom: 10px; transition: 0.2s; cursor: pointer;
+        /* --- Main Hero Section --- */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 20px 80px 20px;
         }
-        .rumor-item:hover { border-color: var(--danger); background: var(--bg-card); }
-        .rumor-title { font-weight: 500; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px; }
-        .rumor-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
-        .verdict-badge { font-weight: 700; color: var(--danger); }
 
-        /* FEED WIDGET */
-        .feed-widget { flex: 1; padding: 20px; min-height: 0; }
-        .search-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-search { background: var(--border); color: var(--text-main); border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; }
-
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .tab { 
-            padding: 8px 16px; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); border-radius: 6px; 
-            transition: 0.2s;
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #FFFFFF;
         }
-        .tab.active { background: var(--bg-input); color: var(--primary); border: 1px solid var(--border); }
 
-        .feed-list { overflow-y: auto; flex: 1; padding-right: 5px; }
-        .feed-list::-webkit-scrollbar { width: 6px; }
-        .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        
-        /* Fixed: Made the whole news entry clickable */
-        .news-entry { padding: 15px 0; border-bottom: 1px solid var(--border); position: relative; }
-        .news-entry a { text-decoration: none; color: var(--text-main); font-weight: 500; display: block; margin-bottom: 5px; }
-        /* This pseudo-element stretches the link to cover the whole box */
-        .news-entry a::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; } 
-        .news-entry:hover a { color: var(--primary); }
-        .news-entry:last-child { border: none; }
-        .news-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .title-highlight {
+            background-color: var(--accent-green);
+            color: #FFFFFF;
+            padding: 2px 12px;
+            border-radius: 4px;
+        }
 
-        /* MODAL */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
+        .input-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 25px;
         }
-        .modal-content {
-            background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px;
-            border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .modal-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
-        .modal-body { font-size: 1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; }
-        .modal-close { 
-            width: 100%; padding: 12px; background: var(--bg-input); color: var(--text-main); 
-            border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600;
-            transition: 0.2s;
-        }
-        .modal-close:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        @media (max-width: 900px) {
-            body { height: auto; overflow-y: auto; display: block; padding: 20px; }
-            .dashboard { display: flex; flex-direction: column; height: auto; width: 100%; gap: 20px; }
-            .feed-widget { height: 500px; }
+        textarea {
+            width: 100%;
+            height: 250px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--muted-text);
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            resize: vertical;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-green);
+            color: #DDDDDD;
+        }
+
+        /* Scrollbar customization for textarea */
+        textarea::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        textarea::-webkit-scrollbar-track {
+            background: #EAEAEA;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            background: #CCCCCC;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 10px 30px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .btn:hover {
+            background: rgba(104, 217, 52, 0.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Prediction Result Inline */
+        .prediction-result {
+            display: none;
+            /* hidden by default */
+            align-items: center;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .prediction-badge {
+            background-color: var(--accent-green);
+            color: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .prediction-badge.fake {
+            background-color: #EF4444;
+            /* Red for fake, though ref just showed green for real */
+        }
+
+        .see-details {
+            color: var(--accent-green-dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .see-details:hover {
+            text-decoration: underline;
+        }
+
+        /* Full Details Panel */
+        .details-panel {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 15px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: left;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .details-panel h4 {
+            color: var(--accent-green);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .details-panel p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #CCCCCC;
+            margin-bottom: 15px;
+        }
+
+        .details-panel .source-label {
+            font-size: 0.8rem;
+            color: var(--muted-text);
+            font-style: italic;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- White Bottom Section --- */
+        .info-section {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .info-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #222;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .feature-card {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 20px;
+        }
+
+        /* Simplified thin line stroke SVGs */
+        .feature-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: #333;
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .feature-desc {
+            font-size: 0.85rem;
+            color: var(--muted-text);
+            line-height: 1.6;
+            max-width: 250px;
+        }
+
+        .feature-desc .highlight-badge {
+            background-color: var(--accent-green);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .features-grid {
+                gap: 40px;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div class="dashboard">
-    
-    <div class="card detector-box">
-        <div class="header">
-            <h1>TruthLens <span>AI</span></h1>
-            <p>Enterprise Grade Rumor Detection System</p>
+    <!-- Header -->
+    <header>
+        <div class="logo">FAKENEWS</div>
+        <nav class="nav-links">
+            <a href="/">Home</a>
+        </nav>
+    </header>
+
+    <!-- Main Hero -->
+    <main class="hero">
+        <h1 class="title">
+            <span class="title-highlight">Fake News</span> - Machine Learning
+        </h1>
+
+        <div class="input-container">
+            <textarea id="newsInput"
+                placeholder="Cyclone Ilsa sets a new wind record as it smashes into Australia's western coast"
+                spellcheck="false"></textarea>
         </div>
 
-        {% if error %}
-        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
-            <span>⚠️</span> {{ error }}
+        <div class="button-group">
+            <button class="btn" id="generateBtn" onclick="generateSampleText()">Generate Text</button>
+            <button class="btn" id="predictBtn" onclick="doPrediction()">Predict</button>
         </div>
-        {% endif %}
 
-        <form action="/predict" method="POST">
-            <label>Input Language Source</label>
-            <select name="language" class="form-control">
-                <option value="english">English (Standard)</option>
-                <option value="tanglish">Tanglish / Tamil (Auto-Translate)</option>
-            </select>
-
-            <label>Article Content</label>
-            <textarea name="news" class="form-control" placeholder="Paste news text here for analysis..." required></textarea>
-
-            <button type="submit" class="btn-submit">Analyze</button>
-        </form>
-    </div>
-
-    <div class="card sidebar">
-        
-        <div class="card alert-widget">
-            <div class="widget-header">
-                <h3><span style="color:var(--danger);">●</span> High Risk Alerts</h3>
-                <span class="refresh-badge">Auto-Refreshes</span>
+        <!-- Inline Prediction Result -->
+        <div class="prediction-result" id="predictionResult"
+            style="width: 100%; max-width: 800px; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="prediction-badge" id="predBadge">Prediction : Maybe Real News</div>
+                <a class="see-details" id="toggleDetailsBtn" onclick="toggleDetails()" style="display:none;">View
+                    detailed reasoning ▼</a>
             </div>
-            
-            {% for rumor in rumors %}
-            <div class="rumor-item" 
-                 data-title="{{ rumor.title }}" 
-                 data-content="{{ rumor.content }}" 
-                 data-verdict="{{ rumor.verdict }}"
-                 onclick="openModal(this)">
-                <div class="rumor-title">{{ rumor.title }}</div>
-                <div class="rumor-meta">
-                    <span class="verdict-badge">{{ rumor.verdict }}</span>
-                    <span>{{ rumor.status }}</span>
+        </div>
+
+        <!-- Expanded Details Panel -->
+        <div class="details-panel" id="detailsPanel">
+            <h4>AI Reasoning & Context</h4>
+            <p id="detailExplanation">Loading explanation...</p>
+            <div class="source-label" id="detailSource">Source: Unknown</div>
+        </div>
+    </main>
+
+    <!-- Bottom Info Section -->
+    <section class="info-section">
+        <h2 class="info-title">News Data</h2>
+
+        <div class="features-grid">
+            <!-- Original Text -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M9 18h6m-5 3h4M12 2a7 7 0 0 0-7 7c0 2 1.5 3.5 2.5 5.5.5 1 1 2 1.5 3.5h6c.5-1.5 1-2.5 1.5-3.5 1-2 2.5-3.5 2.5-5.5a7 7 0 0 0-7-7z">
+                        </path>
+                    </svg>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="card feed-widget">
-            <div class="search-group">
-                <form action="/search_news" method="POST" style="display:flex; width:100%; gap:10px;">
-                    <input type="text" name="query" class="form-control" style="margin:0; padding:10px;" placeholder="Search topic..." value="{{ search_val }}">
-                    <input type="hidden" name="search_lang" value="tanglish">
-                    <button type="submit" class="btn-search">Search</button>
-                </form>
+                <h3 class="feature-title">Original Text</h3>
+                <p class="feature-desc">Cyclone Ilsa sets a new wind record as it smashes into Australia's western coast
+                </p>
             </div>
 
-            <div class="tabs">
-                <div class="tab active" onclick="loadFeed('tamil', this)">Regional</div>
-                <div class="tab" onclick="loadFeed('english', this)">Global</div>
-            </div>
-
-            <div class="feed-list" id="newsContainer">
-                {% for item in news_data %}
-                <div class="news-entry">
-                    <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
-                    <div class="news-meta">{{ item.source }} • {{ item.published[:17] }}</div>
+            <!-- Preprocessed Text -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 19l7-7 3 3-7 7-3-3m-6-6L3 21l3 3 7-7-3-3zM8 4l2-2 4 4-2 2-4-4z"></path>
+                        <path d="M14 6l4 4"></path>
+                    </svg>
                 </div>
-                {% endfor %}
+                <h3 class="feature-title">Preprocessed Text</h3>
+                <p class="feature-desc">cyclon ilsa set new wind record smash australia western coast</p>
+            </div>
+
+            <!-- Transform & Predict -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3zM9 4v16m6-13v16"></path>
+                        <circle cx="12" cy="9" r="3"></circle>
+                        <path d="M12 12s-3-2.5-3-5a3 3 0 0 1 6 0c0 2.5-3 5-3 5z"></path>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Transform & Predict</h3>
+                <p class="feature-desc">
+                    Text predicted as : <br>
+                    <span class="highlight-badge">Maybe Real News</span>
+                </p>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="modal-overlay" id="rumorModal">
-    <div class="modal-content">
-        <div style="font-size: 0.8rem; font-weight: 700; color: var(--danger); margin-bottom: 5px;">VERDICT: <span id="mVerdict">FAKE</span></div>
-        <div class="modal-title" id="mTitle">Rumor Title</div>
-        <div class="modal-body" id="mBody">
-            Rumor details go here...
-        </div>
-        <button class="modal-close" onclick="closeModal()">Close Details</button>
-    </div>
-</div>
+    <script>
+        // Sample Texts for "Generate Text" button
+        const sampleTexts = [
+            "SEATTLE/WASHINGTON (Reuters) - President Donald Trump called on the U.S. Postal Service on Friday to charge \"much more\" to ship packages for Amazon (AMZN.O), picking another fight with an online retail giant he has criticized in the past.  \"Why is the United States Post Office, which is losing many billions of dollars a year, while charging Amazon and others so little to deliver their packages, making Amazon richer and the Post Office dumber and poorer? Should be charging MUCH MORE!\" Trump wrote on Twitter.  The president's tweet drew fresh attention to the fragile finances of the Postal Service at a time when tens of millions of parcels have just been shipped all over the country for the holiday season.",
+            "Tamil Nadu Chief minister Stalin inaugurates slew of infra projects in Kolathur in Chennai.",
+            "Scientists confirm that the earth is completely flat and the moon landing was a hoax filmed in a Hollywood studio in 1969.",
+            "An earthquake measuring 6.5 on the Richter scale struck the northern coast of Japan early Tuesday morning, prompting brief tsunami warnings."
+        ];
 
-<script>
-// FIXED MODAL LOGIC: Reads from data-attributes instead of arguments
-// This prevents errors when text contains quotes like "It's" or "Don't"
-function openModal(element) {
-    document.getElementById('mTitle').innerText = element.getAttribute('data-title');
-    document.getElementById('mBody').innerText = element.getAttribute('data-content');
-    document.getElementById('mVerdict').innerText = element.getAttribute('data-verdict');
-    document.getElementById('rumorModal').style.display = 'flex';
-}
+        function generateSampleText() {
+            const index = Math.floor(Math.random() * sampleTexts.length);
+            const textarea = document.getElementById('newsInput');
+            textarea.value = sampleTexts[index];
+            document.getElementById('predictionResult').style.display = 'none';
+        }
 
-function closeModal() {
-    document.getElementById('rumorModal').style.display = 'none';
-}
+        async function doPrediction() {
+            const text = document.getElementById('newsInput').value.trim();
+            const btn = document.getElementById('predictBtn');
+            const resultBox = document.getElementById('predictionResult');
+            const badge = document.getElementById('predBadge');
+            const detailsPanel = document.getElementById('detailsPanel');
+            const toggleDetailsBtn = document.getElementById('toggleDetailsBtn');
 
-// Feed Switching Logic
-function loadFeed(type, btn) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
+            if (!text) {
+                alert("Please enter or generate text first.");
+                return;
+            }
 
-    fetch('/get_feed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: type })
-    })
-    .then(response => response.json())
-    .then(data => {
-        const container = document.getElementById('newsContainer');
-        container.innerHTML = '';
-        data.forEach(item => {
-            container.innerHTML += `
-                <div class="news-entry">
-                    <a href="${item.link}" target="_blank">${item.title}</a>
-                    <div class="news-meta">${item.source} • ${item.published.substring(0,17)}</div>
-                </div>
-            `;
-        });
-    });
-}
+            btn.disabled = true;
+            btn.textContent = "Predicting...";
+            resultBox.style.display = 'none';
+            detailsPanel.style.display = 'none';
+            toggleDetailsBtn.style.display = 'none';
 
-</script>
+            try {
+                // Call the new quick predict API
+                const resp = await fetch('/api/predict_quick', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
 
+                const data = await resp.json();
+
+                if (data.prediction === 'REAL') {
+                    badge.textContent = "Prediction : Maybe Real News";
+                    badge.style.backgroundColor = "var(--accent-green)";
+                } else if (data.prediction === 'FAKE') {
+                    badge.textContent = "Prediction : Fake News";
+                    badge.style.backgroundColor = "#EF4444"; // Red
+                } else {
+                    badge.textContent = "Prediction : Uncertain";
+                    badge.style.backgroundColor = "#F59E0B"; // Orange
+                }
+
+                // Populate Details
+                document.getElementById('detailExplanation').textContent = data.explanation || "No explanation provided.";
+                document.getElementById('detailSource').innerHTML = `<strong>Primary Source Match:</strong> ${data.source_title || "Unknown"} (Confidence: ${data.confidence}%)`;
+
+                resultBox.style.display = 'flex';
+                toggleDetailsBtn.style.display = 'block';
+
+            } catch (err) {
+                alert("Error connecting to server.");
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Predict";
+            }
+        }
+
+        function toggleDetails() {
+            const panel = document.getElementById('detailsPanel');
+            const btn = document.getElementById('toggleDetailsBtn');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+                btn.textContent = 'Hide detailed reasoning ▲';
+            } else {
+                panel.style.display = 'none';
+                btn.textContent = 'View detailed reasoning ▼';
+            }
+        }
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,30 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Datasets (GitHub blocks files > 100MB, and files > 50MB are warned)
+# We will ignore the massive core datasets, but keep the small Indian ones for the app to work.
+True.csv
+Fake.csv
+
+# Generated data or logs
+data/news_raw.jsonl
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db

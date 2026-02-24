@@ -1,47 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Result</title>
+    <title>Analysis Result - TruthLens AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #121212;
+            background: #0f172a;
             color: white;
             font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s;
+        }
+
+        body.light-mode {
+            background: #f5f7fa;
+            color: #1f2937;
         }
 
         .result-card {
-            background: #1e1e1e;
+            background: #1e293b;
             padding: 50px;
             border-radius: 20px;
             text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            max-width: 600px;
-            width: 90%;
-            border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            max-width: 700px;
+            width: 100%;
+            border: 1px solid #334155;
+            animation: slideIn 0.5s ease-out;
         }
 
-        .status-icon { font-size: 80px; margin-bottom: 20px; display: block; }
-        
-        .fake { color: #FF5252; text-shadow: 0 0 20px rgba(255, 82, 82, 0.4); }
-        .real { color: #00E676; text-shadow: 0 0 20px rgba(0, 230, 118, 0.4); }
+        body.light-mode .result-card {
+            background: #ffffff;
+            border-color: #d1d5db;
+        }
 
-        h1 { font-size: 3rem; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .details { margin: 30px 0; text-align: left; background: #252526; padding: 20px; border-radius: 10px; }
-        .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .text-content { font-size: 1rem; color: #ddd; margin-bottom: 15px; font-style: italic; }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+
+        body.light-mode .theme-toggle {
+            border-color: #d1d5db;
+            color: #1f2937;
+        }
+
+        .theme-toggle:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .status-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            display: block;
+            animation: pulse 0.6s ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .fake {
+            color: #FF5252;
+            text-shadow: 0 0 20px rgba(255, 82, 82, 0.4);
+        }
+
+        .real {
+            color: #10b981;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .verdict-text {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        /* Confidence Bar */
+        .confidence-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            border: 1px solid #3b82f6;
+        }
+
+        body.light-mode .confidence-section {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .confidence-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        body.light-mode .confidence-label {
+            color: #6b7280;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        body.light-mode .confidence-bar {
+            background: #e5e7eb;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #059669);
+            width: 75%;
+            transition: width 0.8s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .confidence-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-top: 10px;
+        }
+
+        /* Details Section */
+        .details {
+            margin: 30px 0;
+            text-align: left;
+            background: #252526;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        body.light-mode .details {
+            background: #f3f4f6;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        body.light-mode .label {
+            color: #6b7280;
+        }
+
+        .text-content {
+            font-size: 1rem;
+            color: #ddd;
+            margin-bottom: 15px;
+            font-style: italic;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        body.light-mode .text-content {
+            color: #374151;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: #475569;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #334155;
+            transform: translateY(-2px);
+        }
+
+        .btn-share {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-share:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
 
         .btn-back {
             display: inline-block;
-            margin-top: 20px;
             padding: 12px 30px;
             background: white;
             color: black;
@@ -49,36 +282,266 @@
             font-weight: bold;
             border-radius: 50px;
             transition: 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
         }
-        .btn-back:hover { background: #ccc; transform: scale(1.05); }
+
+        .btn-back:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+
+        body.light-mode .btn-back {
+            background: #1f2937;
+            color: white;
+        }
+
+        body.light-mode .btn-back:hover {
+            background: #374151;
+        }
+
+        .copy-feedback {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            animation: slideInRight 0.4s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(300px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Fact Check Links */
+        .fact-check-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+        }
+
+        .fact-check-section h4 {
+            margin: 0 0 10px 0;
+            color: #f59e0b;
+            font-size: 0.9rem;
+        }
+
+        .fact-check-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+        }
+
+        .fact-check-links a {
+            color: #3b82f6;
+            text-decoration: none;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .fact-check-links a:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .result-card {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .status-icon {
+                font-size: 60px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<div class="result-card">
-    
-    {% if prediction == 'FAKE' %}
+    <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+
+    <div class="result-card">
+        <div class="header-top">
+            <div></div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+        </div>
+
+        {% if prediction == 'FAKE' %}
         <span class="status-icon fake">⚠</span>
         <h1 class="fake">FAKE NEWS</h1>
-        <p>This content has a high probability of being false.</p>
-    {% else %}
+        <p class="verdict-text">This content has a high probability of being false or misleading.</p>
+        {% else %}
         <span class="status-icon real">✓</span>
         <h1 class="real">REAL NEWS</h1>
-        <p>This content appears to be authentic.</p>
-    {% endif %}
-
-    <div class="details">
-        <div class="label">Original Input</div>
-        <div class="text-content">"{{ original }}"</div>
-        
-        {% if original != translated %}
-        <div class="label">Translated (English)</div>
-        <div class="text-content">"{{ translated }}"</div>
+        <p class="verdict-text">This content appears to be authentic and factually grounded.</p>
         {% endif %}
+
+        <!-- Confidence Score -->
+        <div class="confidence-section">
+            <div class="confidence-label">Confidence Score</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: {{ confidence }}%;">{{ confidence }}%</div>
+            </div>
+            <div class="confidence-percentage">{{ confidence }}% Confident</div>
+        </div>
+
+        <!-- Fact Check Resources -->
+        <div class="fact-check-section">
+            <h4>📚 Verify with Fact Checkers</h4>
+            <div class="fact-check-links">
+                <a href="https://www.snopes.com" target="_blank">Snopes</a>
+                <a href="https://www.factcheck.org" target="_blank">FactCheck.org</a>
+                <a href="https://pib.gov.in" target="_blank">PIB India</a>
+                <a href="https://www.boom.live" target="_blank">Boom</a>
+            </div>
+        </div>
+
+        <!-- Text Content -->
+        <div class="details">
+            <div class="label">Original Input</div>
+            <div class="text-content">"{{ original }}"</div>
+
+            {% if was_translated %}
+            <div class="label">Translated to English</div>
+            <div class="text-content">"{{ translated }}"</div>
+            {% endif %}
+
+            {% if explanation %}
+            <hr style="border-color: #334155; margin: 20px 0;">
+            <div class="label" style="color: #3b82f6;">AI Reasoning & Explanation</div>
+            <div class="text-content" style="font-style: normal;">{{ explanation }}</div>
+            {% endif %}
+
+            {% if source_title %}
+            <div class="label" style="margin-top: 10px;">Primary Source</div>
+            <div class="text-content" style="font-size: 0.9rem;">📍 {{ source_title }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-copy" onclick="copyToClipboard()">
+                📋 Copy Result
+            </button>
+            <button class="btn btn-share" onclick="shareResult()">
+                🔗 Share
+            </button>
+        </div>
+
+        <button class="btn-back" onclick="goHome()">← Check Another</button>
     </div>
 
-    <a href="/" class="btn-back">Check Another</a>
-</div>
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            updateThemeButton();
+        }
+
+        function updateThemeButton() {
+            const isDark = !document.body.classList.contains('light-mode');
+            document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                updateThemeButton();
+            }
+        }
+
+        // Copy to Clipboard
+        function copyToClipboard() {
+            const prediction = "{{ prediction }}";
+            const confidence = "{{ confidence }}";
+            const original = "{{ original }}";
+            const text = `Prediction: ${prediction}\nConfidence: ${confidence}%\nOriginal Text: "${original}"`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const feedback = document.getElementById('copyFeedback');
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        // Share Result
+        function shareResult() {
+            const prediction = "{{ prediction }}";
+            const text = `I just analyzed a news article using TruthLens AI. Verdict: ${prediction}!`;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'TruthLens AI Analysis',
+                    text: text,
+                    url: url
+                });
+            } else {
+                // Fallback: Copy share URL
+                navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+                    alert('Share link copied to clipboard!');
+                });
+            }
+        }
+
+        // Go Home
+        function goHome() {
+            // Save to history before leaving
+            const history = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
+            const item = {
+                text: "{{ original }}".substring(0, 50) + ("{{ original }}".length > 50 ? '...' : ''),
+                prediction: "{{ prediction }}",
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            history.unshift(item);
+            history.splice(5);
+            localStorage.setItem('analysisHistory', JSON.stringify(history));
+
+            window.location.href = '/';
+        }
+
+        // Initialize
+        loadTheme();
+
+        // Auto-save confidence to localStorage for statistics
+        fetch('/api/model-status');
+    </script>
 
 </body>
+
 </html>
