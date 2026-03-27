@@ -9,7 +9,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 RAW_FILE = os.path.join(DATA_DIR, 'news_raw.jsonl')
 
 QUERIES = [
-    'India', 'World', 'Narendra Modi', 'PM Modi', 'India news', 'BJP', 'Congress'
+    'Tamil Nadu', 'Chennai', 'Actor Vijay', 'Thalapathy Vijay', 'Tamil Cinema', 
+    'MK Stalin', 'Tamil Nadu politics', 'India', 'World'
 ]
 
 def _get_domain(url):

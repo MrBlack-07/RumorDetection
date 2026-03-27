@@ -12,6 +12,8 @@ from urllib.parse import urlparse
 from news_collector import collect_news
 from update_dataset import build_combined_csv
 from qa_engine import get_qa_answer
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -541,6 +543,29 @@ def predict():
                              rumors=current_rumors,
                              model_status=model_status,
                              error="[ERROR] Analysis failed. Please try again.")
+
+def start_daily_updater():
+    """Background thread to update the news database daily."""
+    def updater_loop():
+        # Initial sleep to avoid blocking server boot
+        time.sleep(10)
+        while True:
+            try:
+                print("[INFO] Running daily Tamil Nadu news update to database...")
+                added = collect_news()
+                if added > 0:
+                    print(f"[INFO] Collected {added} new Tamil Nadu articles.")
+                    build_combined_csv()
+                else:
+                    print("[INFO] No new articles found today.")
+            except Exception as e:
+                print(f"[ERROR] Daily database update failed: {e}")
+            
+            # Sleep for 24 hours (86400 seconds)
+            time.sleep(86400)
+
+# Start background updater when the app loads
+start_daily_updater()
 
 if __name__ == '__main__':
     app.run(debug=True)
