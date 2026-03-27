@@ -15,8 +15,8 @@ def load_data():
         if 'label' in df.columns and 'text' in df.columns:
             return df['text'], df['label']
     # fallback to original
-    df_true = pd.read_csv('True.csv') if os.path.exists('True.csv') else None
-    df_fake = pd.read_csv('Fake.csv') if os.path.exists('Fake.csv') else None
+    df_true = pd.read_csv(os.path.join(BASE, 'datasets', 'True.csv')) if os.path.exists(os.path.join(BASE, 'datasets', 'True.csv')) else None
+    df_fake = pd.read_csv(os.path.join(BASE, 'datasets', 'Fake.csv')) if os.path.exists(os.path.join(BASE, 'datasets', 'Fake.csv')) else None
     frames = []
     if df_true is not None:
         df_true['text'] = df_true.get('title','').fillna('') + ' ' + df_true.get('text','').fillna('')
@@ -44,9 +44,9 @@ def train_and_save():
     print('Precision:', precision_score(y_test, pred, pos_label='FAKE'))
     print('Recall:', recall_score(y_test, pred, pos_label='FAKE'))
     print('F1:', f1_score(y_test, pred, pos_label='FAKE'))
-    pickle.dump(clf, open('pac.pkl','wb'))
-    pickle.dump(vec, open('vectorizer.pkl','wb'))
-    print('Saved pac.pkl and vectorizer.pkl')
+    pickle.dump(clf, open(os.path.join(BASE, 'models', 'pac.pkl'),'wb'))
+    pickle.dump(vec, open(os.path.join(BASE, 'models', 'vectorizer.pkl'),'wb'))
+    print('Saved models/pac.pkl and models/vectorizer.pkl')
 
 if __name__ == '__main__':
     train_and_save()

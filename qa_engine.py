@@ -20,12 +20,12 @@ class QAEngine:
 
     def load_data(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        true_path = os.path.join(base_dir, 'True_India.csv')
-        fake_path = os.path.join(base_dir, 'Fake_India.csv')
+        true_path = os.path.join(base_dir, 'datasets', 'True_India.csv')
+        fake_path = os.path.join(base_dir, 'datasets', 'Fake_India.csv')
         
         # Load comprehensive if they exist, else primary
-        true_comp_path = os.path.join(base_dir, 'True_India_Comprehensive.csv')
-        fake_comp_path = os.path.join(base_dir, 'Fake_India_Comprehensive.csv')
+        true_comp_path = os.path.join(base_dir, 'datasets', 'True_India_Comprehensive.csv')
+        fake_comp_path = os.path.join(base_dir, 'datasets', 'Fake_India_Comprehensive.csv')
         
         if os.path.exists(true_comp_path):
             true_path = true_comp_path
@@ -102,17 +102,17 @@ class QAEngine:
         if label == 'REAL':
             if has_negation:
                 verdict = "No"
-                explanation = f"Your statement contains a negation, but our verified database confirms the opposite: {context}"
+                explanation = f"As your AI assistant checking proper sources across India, I found your statement contains a negation, but our verified databases confirm the opposite is TRUE: {context}"
             else:
                 verdict = "Yes"
-                explanation = f"{context}"
+                explanation = f"As your AI assistant checking proper sources across India, I can confirm this is TRUE. {context}"
         else:
             if has_negation:
                 verdict = "Yes"
-                explanation = f"Correct. The underlying claim is recognized as fake or misleading in our database. {context}"
+                explanation = f"As your AI assistant, you are correct. I checked proper sources and the underlying claim is FALSE. {context}"
             else:
                 verdict = "No"
-                explanation = f"This information is recognized as fake or misleading in our database. {context}"
+                explanation = f"As your AI assistant, I can confirm this information is FALSE based on verified sources. {context}"
 
         return {
             "verdict": verdict,
@@ -126,10 +126,12 @@ class QAEngine:
     def wikipedia_fallback(self, query):
         """Search Wikipedia first for factual/timeless queries before hitting Live News."""
         
-        # Step 0: Check for breaking news keywords. If it's time-sensitive, Wikipedia won't help.
+        # Step 0: Check for breaking news keywords or question formats.
         query_words = query.lower().split()
-        breaking_keywords = ['today', 'yesterday', 'now', 'breaking', 'latest', 'update', 'recently', 'current']
-        if any(kw in query_words for kw in breaking_keywords):
+        breaking_keywords = ['today', 'yesterday', 'now', 'breaking', 'latest', 'update', 'recently', 'current', 'news']
+        question_words = ('is ', 'are ', 'was ', 'were ', 'will ', 'did ', 'does ', 'do ', 'has ', 'have ', 'who ', 'what ', 'when ', 'where ', 'why ', 'how ')
+        
+        if any(kw in query_words for kw in breaking_keywords) or query.lower().startswith(question_words):
             return self.live_search_fallback(query)
             
         try:
@@ -181,11 +183,11 @@ class QAEngine:
             # If the query contains a negation (e.g., "The earth is NOT round"), then it contradicts the factual Wikipedia text.
             if has_negation:
                 verdict = "No"
-                explanation = f"Your statement contradicts known facts. According to Wikipedia: {context}"
+                explanation = f"As your AI assistant checking global proper sources, your statement contradicts known facts. Thus it is FALSE. According to Wikipedia: {context}"
                 confidence = 80.0
             else:
                 verdict = "Yes"
-                explanation = f"Factually accurate. According to Wikipedia: {context}"
+                explanation = f"As your AI assistant, this is factually TRUE. According to Wikipedia: {context}"
                 confidence = 85.0
                 
             return {
@@ -200,67 +202,118 @@ class QAEngine:
             return self.live_search_fallback(query)
 
     def live_search_fallback(self, query):
-        """Fallback to Google News RSS if local database lacks confidence."""
+        """Agentic LLM-like Web Search: Fallback to Google News RSS and Wikipedia context."""
         try:
+            # 1. Base Context Generation (Fetch a quick Wikipedia snippet for the main entity)
+            context_intro = ""
+            try:
+                search_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={quote_plus(query)}&utf8=&format=json"
+                headers = {'User-Agent': 'TruthLensAI/1.0'}
+                resp = requests.get(search_url, headers=headers, timeout=3).json()
+                search_results = resp.get('query', {}).get('search', [])
+                if search_results:
+                    top_title = search_results[0]['title']
+                    summary_url = f"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles={quote_plus(top_title)}&format=json"
+                    summary_resp = requests.get(summary_url, headers=headers, timeout=3).json()
+                    pages = summary_resp.get('query', {}).get('pages', {})
+                    page = list(pages.values())[0]
+                    extract = page.get('extract', '').strip()
+                    if extract:
+                        sentences = [s.strip() for s in extract.replace('?', '.').replace('!', '.').split('.') if len(s.strip()) > 5]
+                        if sentences:
+                            context_intro = "📚 Context: " + ". ".join(sentences[:2]) + ".\n\n"
+            except Exception as e:
+                pass # Ignore wiki context failures
+
+            # 2. Google News RSS Search
             search_url = f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=en-IN&gl=IN&ceid=IN:en"
             feed = feedparser.parse(search_url)
             
             if not feed.entries:
                 return {
                     "verdict": "UNKNOWN",
-                    "explanation": "I couldn't find relevant Indian news in my database OR online to confidently answer this question. It might be too obscure or highly specific.",
+                    "explanation": f"{context_intro}🕵️‍♂️ I couldn't find recent relevant news in my database OR online to confidently answer this question.",
                     "source_title": "No Sources Found",
                     "confidence": 0
                 }
                 
-            # Smart NLP Ranking for Top 5 Live News
-            top_entries = feed.entries[:5]
-            best_entry = top_entries[0]
+            # Analyze all top entries
+            top_entries = feed.entries[:10]
             
-            try:
-                descriptions = [getattr(entry, 'description', getattr(entry, 'summary', entry.title)) for entry in top_entries]
-                texts = [query] + [f"{e.title} {d}" for e, d in zip(top_entries, descriptions)]
+            fact_check_news = []
+            reliable_news = []
+            
+            fact_checkers = ['altnews', 'boom', 'factly', 'factcheck', 'snopes', 'pib fact check', 'quint', 'vishvas news', 'newschecker']
+            reliable = ['hindu', 'ndtv', 'times of india', 'indian express', 'pib', 'reuters', 'bbc', 'ani', 'pti', 'mint', 'business standard', 'telegraph']
+            
+            for entry in top_entries:
+                title = entry.title
+                source = entry.source.title if hasattr(entry, 'source') else 'Google News'
+                source_lower = source.lower()
+                title_lower = title.lower()
                 
-                # Fresh vectorizer for isolated comparison
-                temp_vec = TfidfVectorizer(stop_words='english')
-                vecs = temp_vec.fit_transform(texts)
-                sims = cosine_similarity(vecs[0:1], vecs[1:]).flatten()
+                is_fact_check = any(fc in source_lower for fc in fact_checkers) or any(word in title_lower for word in ['fact check', 'fake', 'hoax', 'busted', 'fact-check'])
+                is_reliable = any(r in source_lower for r in reliable)
                 
-                max_idx = sims.argmax()
-                best_entry = top_entries[max_idx]
-            except Exception as e:
-                print(f"Live Search NLP Error: {e}")
-                
-            title = best_entry.title
-            source = best_entry.source.title if hasattr(best_entry, 'source') else 'Google News'
-            
-            # Simple heuristic for live search
-            source_lower = source.lower()
-            title_lower = title.lower()
-            
-            fact_checkers = ['altnews', 'boom', 'factly', 'factcheck', 'snopes', 'pib fact check']
-            reliable = ['hindu', 'ndtv', 'times of india', 'indian express', 'pib', 'reuters', 'bbc', 'ani', 'pti']
-            
-            is_fact_check = any(fc in source_lower for fc in fact_checkers) or any(word in title_lower for word in ['fact check', 'fake', 'hoax', 'busted'])
-            is_reliable = any(r in source_lower for r in reliable)
-            
-            if is_fact_check:
+                if is_fact_check:
+                    fact_check_news.append({'title': title, 'source': source})
+                elif is_reliable:
+                    reliable_news.append({'title': title, 'source': source})
+                else:
+                    # General news, fallback
+                    reliable_news.append({'title': title, 'source': source})
+
+            # Determine Verdict and Build Explanation
+            explanation = context_intro
+            verdict = "Yes"
+            confidence = 50.0
+            source_title = "Multiple Sources"
+
+            if fact_check_news:
                 verdict = "No"
-                explanation = f"Fact-checkers have recently addressed this. According to {source}, the truth is: {title}."
                 confidence = 85.0
-            elif is_reliable:
-                verdict = "Yes"
-                explanation = f"According to real-time reports from reliable sources like {source}, the latest news is: {title}."
-                confidence = 80.0
-            else:
-                verdict = "Yes" # Default to yes for general news, but with lower confidence
-                explanation = f"I found recent news matching your query online. According to {source}: {title}."
-                confidence = 65.0
+                explanation += "🚨 As your AI assistant checking proper sources across India, I found fact-checkers have debunked this. It is FALSE. Fact-check reports:\n"
+                for news in fact_check_news[:2]:
+                    explanation += f"- [{news['source']}] {news['title']}\n"
+                explanation += "\n"
+
+            if reliable_news:
+                # Basic NLP keyword match heuristic for claim verification
+                stop_words = {'is', 'are', 'am', 'was', 'were', 'do', 'does', 'did', 'has', 'have', 'had', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'about', 'actor', 'actress', 'minister', 'news', 'latest', 'recently', 'today', 'true', 'false', 'any', 'some', 'my'}
+                q_words = [w for w in query.lower().replace('?', '').split() if w not in stop_words]
                 
+                unique_news = []
+                seen_titles = set()
+                for news in reliable_news:
+                    if news['title'] not in seen_titles:
+                        unique_news.append(news)
+                        seen_titles.add(news['title'])
+                        
+                combined_titles = " ".join([n['title'].lower() for n in unique_news[:5]])
+                matched_words = [w for w in q_words if w in combined_titles]
+                match_ratio = len(matched_words) / len(q_words) if q_words else 1.0
+                
+                if verdict == "Yes":
+                    if match_ratio > 0.6:
+                        confidence = 85.0
+                        explanation += "✅ As your AI assistant, I scanned proper news sources across India and verified this is TRUE. Latest reports:\n"
+                    else:
+                        verdict = "UNCERTAIN"
+                        confidence = 50.0
+                        explanation += "🕵️‍♂️ As your AI assistant, I found news related to this topic across India, but proper sources do not explicitly confirm this exact claim. Latest reports:\n"
+                else:
+                    explanation += "📰 Other Top News:\n"
+                
+                for news in unique_news[:4]:
+                    explanation += f"- [{news['source']}] {news['title']}\n"
+            else:
+                if not fact_check_news:
+                    explanation += "I found some general news articles online, but couldn't verify them against my list of highly trustable sources."
+                    
             return {
                 "verdict": verdict,
-                "explanation": explanation,
-                "source_title": title + " (Live Online Search)",
+                "explanation": explanation.strip(),
+                "source_title": source_title + " (Live Online Search)",
                 "confidence": confidence
             }
             

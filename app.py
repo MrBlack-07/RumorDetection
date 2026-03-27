@@ -184,9 +184,9 @@ def load_model(name, model_path, vec_path):
         return False
 
 # Load original model (default)
-load_model('original', 'pac.pkl', 'vectorizer.pkl')
+load_model('original', 'models/pac.pkl', 'models/vectorizer.pkl')
 # Load India-specific model (assumes these filenames from train_india_model.py)
-load_model('india', 'pac_india.pkl', 'vectorizer_india.pkl')
+load_model('india', 'models/pac_india.pkl', 'models/vectorizer_india.pkl')
 
 model_status = "READY" if any(m['status'] == 'READY' for m in models.values()) else "ERROR"
 
@@ -461,9 +461,9 @@ def predict_quick():
         answer = get_qa_answer(text)
         
         if answer['verdict'] == 'Yes':
-            prediction = 'REAL'
+            prediction = 'TRUE'
         elif answer['verdict'] == 'No':
-            prediction = 'FAKE'
+            prediction = 'FALSE'
         else:
             prediction = 'UNCERTAIN'
             
@@ -514,9 +514,9 @@ def predict():
             
             # Map QA Engine 'Yes/No' back to 'REAL/FAKE' for the legacy result.html layout
             if answer['verdict'] == 'Yes':
-                prediction = 'REAL'
+                prediction = 'TRUE'
             elif answer['verdict'] == 'No':
-                prediction = 'FAKE'
+                prediction = 'FALSE'
             else:
                 prediction = 'UNCERTAIN'
                 

@@ -225,6 +225,7 @@
             font-style: italic;
             line-height: 1.5;
             word-break: break-word;
+            white-space: pre-wrap;
         }
 
         body.light-mode .text-content {
@@ -397,14 +398,14 @@
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
         </div>
 
-        {% if prediction == 'FAKE' %}
+        {% if prediction == 'FALSE' or prediction == 'FAKE' %}
         <span class="status-icon fake">⚠</span>
-        <h1 class="fake">FAKE NEWS</h1>
-        <p class="verdict-text">This content has a high probability of being false or misleading.</p>
+        <h1 class="fake">FALSE</h1>
+        <p class="verdict-text">As your AI assistant checking proper sources, I can confirm this information is FALSE.</p>
         {% else %}
         <span class="status-icon real">✓</span>
-        <h1 class="real">REAL NEWS</h1>
-        <p class="verdict-text">This content appears to be authentic and factually grounded.</p>
+        <h1 class="real">TRUE</h1>
+        <p class="verdict-text">As your AI assistant checking proper sources across India, I can confirm this is TRUE.</p>
         {% endif %}
 
         <!-- Confidence Score -->

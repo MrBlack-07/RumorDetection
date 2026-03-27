@@ -60,8 +60,8 @@ def build_combined_csv():
     vec = None
     # Load existing vectorizer and model if available
     try:
-        vec = pickle.load(open('vectorizer.pkl','rb'))
-        model = pickle.load(open('pac.pkl','rb'))
+        vec = pickle.load(open(os.path.join(BASE_DIR, 'models', 'vectorizer.pkl'),'rb'))
+        model = pickle.load(open(os.path.join(BASE_DIR, 'models', 'pac.pkl'),'rb'))
     except Exception:
         vec = None
         model = None
@@ -76,9 +76,10 @@ def build_combined_csv():
     # Load existing True/Fake datasets if present
     frames = [df_recent[['text','label']]]
     for fname in ['True.csv','Fake.csv','True_India_Comprehensive.csv','Fake_India_Comprehensive.csv']:
-        if os.path.exists(fname):
+        filepath = os.path.join(BASE_DIR, 'datasets', fname)
+        if os.path.exists(filepath):
             try:
-                df = pd.read_csv(fname)
+                df = pd.read_csv(filepath)
                 if 'title' in df.columns and 'text' in df.columns:
                     df['text'] = df['title'].fillna('') + ' ' + df['text'].fillna('')
                 if 'text' in df.columns and 'label' in df.columns:
